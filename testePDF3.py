@@ -29,15 +29,15 @@ def read_patient_data(json_file):
             patient = resource
         elif resource['resourceType'] == 'Condition':
             # Identificar o status da condição
-            status = resource.get('clinicalStatus', {}).get('coding', [{}])[0].get('code', '')
+            clinical_status = resource.get('clinicalStatus', {}).get('coding', [{}])[0].get('code', '')
+            verification_status = resource.get('verificationStatus', {}).get('coding', [{}])[0].get('code', '')
             diagnosis_text = resource['code']['text']
             
-            if status == 'provisional':  # Hipóteses Diagnósticas
+            # Atualizando a lógica para capturar diagnósticos definitivos
+            if clinical_status == 'provisional':  # Hipóteses Diagnósticas
                 hypotheses.append(diagnosis_text)
-            elif status == 'confirmed':  # Diagnósticos Definitivos
+            elif clinical_status in ['confirmed', 'active', 'resolved']:  # Diagnósticos Definitivos mais flexíveis
                 definitive_diagnoses.append(diagnosis_text)
-            elif status == 'active' and not definitive_diagnoses:  # Se não houver "confirmed", "active" serve como hipótese
-                hypotheses.append(diagnosis_text)
                 
             anamnesis.append(diagnosis_text)  # Usar diagnósticos como anamnese (sintomas relatados)
         
@@ -78,8 +78,8 @@ def read_patient_data(json_file):
             'last_height': last_height,
             'last_weight': last_weight,
             'last_bp': last_bp,
-            'hypotheses': hypotheses,  # Agora diferenciado
-            'definitive_diagnoses': definitive_diagnoses,  # Agora diferenciado com "active" e "confirmed"
+            'hypotheses': hypotheses,
+            'definitive_diagnoses': definitive_diagnoses,
             'treatments': treatments
         }
 
